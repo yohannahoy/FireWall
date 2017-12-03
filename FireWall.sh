@@ -159,8 +159,6 @@ echo 0 > /proc/sys/net/ipv4/conf/all/send_redirects
 
 #Préconisation ANSSI
 
-# Pas de  routage  entre  les  interfaces
-sysctl -w net.ipv4.ip_forward=0
 # Filtrage  par  chemin  inverse
 sysctl -w net.ipv4.conf.all.rp_filter=1
 sysctl -w net.ipv4.conf.default.rp_filter=1
@@ -236,6 +234,16 @@ sysctl -w kernel.perf_cpu_time_max_percent=1
 
 }
 
+
+fw_routage () {
+# Active le  routage  entre  les  interfaces
+sysctl -w net.ipv4.ip_forward=1
+}
+
+fw_masque () {
+iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o eth0 -j MASQUERADE
+}
+
 ##########################
 # Arret du PareFeu 
 ##########################
@@ -291,10 +299,22 @@ laxist)
 fw_laxist
  echo "Mise en place terminée."
  ;;
+routage)
+ echo -n "Routage activé : "
+fw_routage
+ echo "Mise en place terminée."
+ ;;
+masquerade)
+ echo -n "Routage activé : "
+fw_masque
+ echo "Mise en place terminée."
+ ;;
 *)
- echo "Usage: $0 {start|stop|restart|laxist}"
+ echo "Usage: $0 {start|stop|restart|laxist|routage|masquerade}"
  echo "La fonction stop interdit tous les flux entrants ou sortants."
  echo "La fonction laxist autorise tous les flux entrants ou sortants."
+ echo "La fonction routage active le forward entre les différentes interfaces."
+ echo "La fonction masquerade... comme son nom l'indique."
  exit 1
  ;;
 esac
